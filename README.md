@@ -6,7 +6,7 @@ Este projeto é um sistema de reconhecimento facial em **tempo real**, desenvolv
 
 ## 📁 Estrutura do Projeto
 ```bash
-📂 reconhecimento_facial/
+reconhecimento_facial/
 │── 📄 capturar.py        # Captura imagens do usuário e envia para o bucket no Supabase
 │── 📄 treinar.py         # Baixa as imagens do Supabase, treina o modelo e gera modelo.yml + labels.txt
 │── 📄 reconhecer.py      # Carrega modelo.yml e labels.txt e faz o reconhecimento em tempo real
