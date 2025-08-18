@@ -1,27 +1,30 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import json
 
 MODEL_PATH = "modelo.yml"
-
-labels = {
-    0: "fulano",
-    1: "fulano02",
-    2: "Teste01 Usuario",
-}
-
+LABELS_PATH = "labels.json"
 LIMITE_CONF = 70
+
+try:
+    with open(LABELS_PATH, "r", encoding="utf-8") as f:
+        labels = json.load(f)  
+except FileNotFoundError:
+    print(f"Arquivo {LABELS_PATH} não encontrado. Execute primeiro treinar.py")
+    exit(1)
+
+labels_inv = {v: k for k, v in labels.items()}
 
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("Não foi possível abrir a webcam.")
     exit(1)
-    
+
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 recognizer.read(MODEL_PATH)
 
 mp_face_detection = mp.solutions.face_detection
-mp_drawing = mp.solutions.drawing_utils
 
 ultima_posicao = None  
 
@@ -70,7 +73,7 @@ with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence
                     nome = "Desconhecido"
                     cor = (0, 0, 255) 
                 else:
-                    nome = labels.get(id_, "Desconhecido")
+                    nome = labels_inv.get(id_, "Desconhecido")
                     cor = (0, 255, 0)  
 
                 cv2.rectangle(frame, (x1, y1), (x2, y2), cor, 2)
