@@ -1,15 +1,18 @@
 import cv2
 import numpy as np
 from supabase import create_client
+import json
 
-SUPABASE_URL = "https://SEU_PROJETO.supabase.co"
-SUPABASE_KEY = "SEU_API_KEY"
+# Configurações Supabase
+SUPABASE_URL = "https://bngwnknyxmhkeesoeizb.supabase.co"
+SUPABASE_KEY = "SEU_SUPABASE_KEY_AQUI"
 BUCKET_NAME = "faces"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 print("🔄 Baixando imagens do bucket Supabase...")
 
+# Listar usuários (pastas)
 usuarios = supabase.storage.from_(BUCKET_NAME).list(path="")
 if not usuarios:
     print(" Nenhum usuário encontrado no bucket.")
@@ -53,9 +56,19 @@ print(f"✅ {len(imagens)} imagens carregadas para treino.")
 try:
     recognizer = cv2.face.LBPHFaceRecognizer_create()
 except AttributeError:
-    print(" Módulo 'cv2.face' não encontrado. Certifique-se de ter 'opencv-contrib-python' instalado.")
+    print(" Módulo 'cv2.face' não encontrado. Instale 'opencv-contrib-python'.")
     exit()
 
+# Treinar modelo
 recognizer.train(imagens, np.array(labels))
+
+# Salvar modelo
 recognizer.write("modelo.yml")
-print("O treinamento foi um SUCESSO !!! Adicionado no 'modelo.yml'.")
+print("O treinamento foi um SUCESSO! Modelo salvo em 'modelo.yml'.")
+
+# Salvar labels para uso futuro
+with open("labels.json", "w", encoding="utf-8") as f:
+    json.dump(label_ids, f, ensure_ascii=False, indent=4)
+
+print("Labels salvos em 'labels.json':")
+print(label_ids)
