@@ -1,15 +1,17 @@
 import cv2
 import mediapipe as mp
-import os
 import time
+import io
+from supabase import create_client, Client
+
+SUPABASE_URL = "https://SEU_PROJETO.supabase.co"
+SUPABASE_KEY = "SEU_API_KEY"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 pessoa = input("Digite o NOME da pessoa a cadastrar: ").strip()
 if not pessoa:
     print("Nome inválido.")
     exit(1)
-
-dataset_dir = os.path.join("data", pessoa)
-os.makedirs(dataset_dir, exist_ok=True)
 
 cap = cv2.VideoCapture(0)  
 if not cap.isOpened():
@@ -62,9 +64,18 @@ with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence
         if key == ord('q'):
             break
         if key == ord('s') and last_face_gray is not None:
-            filename = os.path.join(dataset_dir, f"{int(time.time()*1000)}.jpg")
-            cv2.imwrite(filename, last_face_gray)
-            print(f"Salvo: {filename}")
+            # Nome único para cada foto
+            filename = f"{int(time.time()*1000)}.jpg"
+
+            # Converter imagem em bytes
+            _, buffer = cv2.imencode(".jpg", last_face_gray)
+            file_bytes = io.BytesIO(buffer)
+
+            # Upload para Supabase
+            path_in_bucket = f"{pessoa}/{filename}"
+            supabase.storage.from_("faces").upload(path_in_bucket, file_bytes.read())
+
+            print(f"✅ Foto enviada para Supabase: {path_in_bucket}")
 
 cap.release()
 cv2.destroyAllWindows()

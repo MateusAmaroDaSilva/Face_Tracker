@@ -1,55 +1,61 @@
-import os
-import json
 import cv2
 import numpy as np
+from supabase import create_client
 
-dataset_root = "data"
-model_path = "model.yml"
-labels_path = "labels.json"
+SUPABASE_URL = "https://SEU_PROJETO.supabase.co"
+SUPABASE_KEY = "SEU_API_KEY"
+BUCKET_NAME = "faces"
 
-if not os.path.isdir(dataset_root):
-    print("Pasta 'data' não encontrada. Execute o captura.py primeiro.")
-    exit(1)
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Mapeia nomes -> IDs
-label_to_id = {}
-images = []
+print("🔄 Baixando imagens do bucket Supabase...")
+
+usuarios = supabase.storage.from_(BUCKET_NAME).list(path="")
+if not usuarios:
+    print(" Nenhum usuário encontrado no bucket.")
+    exit()
+
+imagens = []
 labels = []
+label_ids = {}
 current_id = 0
 
-for nome in sorted(os.listdir(dataset_root)):
-    pessoa_dir = os.path.join(dataset_root, nome)
-    if not os.path.isdir(pessoa_dir):
-        continue
+for user in usuarios:
+    nome_usuario = user['name']
+    arquivos = supabase.storage.from_(BUCKET_NAME).list(path=nome_usuario)
 
-    if nome not in label_to_id:
-        label_to_id[nome] = current_id
-        current_id += 1
-
-    for file in os.listdir(pessoa_dir):
-        if not file.lower().endswith((".jpg", ".jpeg", ".png")):
+    for arquivo in arquivos:
+        caminho_bucket = f"{nome_usuario}/{arquivo['name']}"
+        try:
+            arquivo_bytes = supabase.storage.from_(BUCKET_NAME).download(caminho_bucket)
+        except Exception as e:
+            print(f" Erro ao baixar {caminho_bucket}: {e}")
             continue
-        path = os.path.join(pessoa_dir, file)
-        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-        if img is None:
+
+        if arquivo_bytes is None or len(arquivo_bytes) == 0:
             continue
-        # garante tamanho consistente
-        img = cv2.resize(img, (200, 200))
-        images.append(img)
-        labels.append(label_to_id[nome])
 
-if not images:
-    print("Nenhuma imagem encontrada. Capture rostos com captura.py.")
-    exit(1)
+        nparr = np.frombuffer(arquivo_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+        if img is not None:
+            imagens.append(img)
+            if nome_usuario not in label_ids:
+                label_ids[nome_usuario] = current_id
+                current_id += 1
+            labels.append(label_ids[nome_usuario])
 
-# Treina LBPH (precisa de opencv-contrib-python)
-recognizer = cv2.face.LBPHFaceRecognizer_create(radius=1, neighbors=8, grid_x=8, grid_y=8)
-recognizer.train(images, np.array(labels))
-recognizer.save(model_path)
+if not imagens:
+    print(" Nenhuma imagem válida encontrada. Abortando treino.")
+    exit()
 
-# salva labels
-with open(labels_path, "w", encoding="utf-8") as f:
-    json.dump(label_to_id, f, ensure_ascii=False, indent=2)
+print(f"✅ {len(imagens)} imagens carregadas para treino.")
 
-print(f"Modelo salvo em: {model_path}")
-print(f"Labels salvos em: {labels_path}")
+try:
+    recognizer = cv2.face.LBPHFaceRecognizer_create()
+except AttributeError:
+    print(" Módulo 'cv2.face' não encontrado. Certifique-se de ter 'opencv-contrib-python' instalado.")
+    exit()
+
+recognizer.train(imagens, np.array(labels))
+recognizer.write("modelo.yml")
+print("O treinamento foi um SUCESSO !!! Adicionado no 'modelo.yml'.")
