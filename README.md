@@ -6,13 +6,13 @@ Este projeto é um sistema de reconhecimento facial em **tempo real**, desenvolv
 
 ## 📁 Estrutura do Projeto
 ```bash
-├─ data/ # Fotos por pessoa
-│ ├─ nome_da_pessoa/
-│ │ ├─ 123456789.jpg
-├─ captura.py # Captura rostos da webcam
-├─ treinar.py # Treina o modelo LBPH
-├─ reconhecer.py # Reconhece rostos em tempo real
-└─ requirements.txt # Dependências do projeto
+📂 reconhecimento_facial/
+│── 📄 capturar.py        # Captura imagens do usuário e envia para o bucket no Supabase
+│── 📄 treinar.py         # Baixa as imagens do Supabase, treina o modelo e gera modelo.yml + labels.txt
+│── 📄 reconhecer.py      # Carrega modelo.yml e labels.txt e faz o reconhecimento em tempo real
+│── 📄 modelo.yml         # Arquivo do modelo treinado (gerado pelo treinar.py)
+│── 📄 labels.txt         # Mapeamento ID -> Nome completo (gerado pelo treinar.py)
+│── 📄 requirements.txt   # Dependências (cv2, mediapipe, supabase, numpy etc.)
 ```
 
 ---
