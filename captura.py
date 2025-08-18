@@ -4,8 +4,8 @@ import time
 import io
 from supabase import create_client, Client
 
-SUPABASE_URL = "https://SEU_PROJETO.supabase.co"
-SUPABASE_KEY = "SEU_API_KEY"
+SUPABASE_URL = "https://bngwnknyxmhkeesoeizb.supabase.co"
+SUPABASE_KEY = "SEU_SUPABASE_KEY_AQUI"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 pessoa = input("Digite o NOME da pessoa a cadastrar: ").strip()
@@ -75,7 +75,7 @@ with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence
             path_in_bucket = f"{pessoa}/{filename}"
             supabase.storage.from_("faces").upload(path_in_bucket, file_bytes.read())
 
-            print(f"✅ Foto enviada para Supabase: {path_in_bucket}")
+            print(f"Foto enviada para Supabase: {path_in_bucket}")
 
 cap.release()
 cv2.destroyAllWindows()
