@@ -8,7 +8,7 @@ import os
 
 # Configurações Supabase
 SUPABASE_URL = "https://bngwnknyxmhkeesoeizb.supabase.co"
-SUPABASE_KEY = "SUA_CHAVE_AQUI"
+SUPABASE_KEY = "SEU_SUPABASE_KEY_AQUI"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
